@@ -29,68 +29,125 @@
             background-color: #c8e6c9;
             border-color: #2e7d32;
         }
+        .completed-tasks {
+            margin: 20px 0;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Habit Tracker</h1>
-    <p>Click on a quadrant to mark it as done for the day!</p>
 
-    <!-- Quadrants Section -->
-    <div class="quadrants">
-        <div class="quadrant" id="quadrant-body" onclick="markAsDone('Body')">
-            <h2>Body</h2>
-            <p>Physical health and exercise</p>
+    <!-- Ty's Section -->
+    <div>
+        <h2>Ty's Progress</h2>
+        <div id="ty-progress" class="completed-tasks">
+            <p>No tasks completed yet.</p>
         </div>
-        <div class="quadrant" id="quadrant-intellectual" onclick="markAsDone('Intellectual')">
-            <h2>Intellectual</h2>
-            <p>Reading, learning, or skills</p>
+        <div class="quadrants">
+            <div class="quadrant" id="ty-body" onclick="markAsDone('Ty', 'Body')">
+                <h2>Body</h2>
+                <p>Physical health and exercise</p>
+            </div>
+            <div class="quadrant" id="ty-intellectual" onclick="markAsDone('Ty', 'Intellectual')">
+                <h2>Intellectual</h2>
+                <p>Reading, learning, or skills</p>
+            </div>
+            <div class="quadrant" id="ty-mental" onclick="markAsDone('Ty', 'Mental')">
+                <h2>Mental</h2>
+                <p>Meditation or reflection</p>
+            </div>
+            <div class="quadrant" id="ty-social" onclick="markAsDone('Ty', 'Social')">
+                <h2>Social</h2>
+                <p>Connecting with friends or family</p>
+            </div>
         </div>
-        <div class="quadrant" id="quadrant-mental" onclick="markAsDone('Mental')">
-            <h2>Mental</h2>
-            <p>Meditation or reflection</p>
+    </div>
+
+    <!-- Henry's Section -->
+    <div>
+        <h2>Henry's Progress</h2>
+        <div id="henry-progress" class="completed-tasks">
+            <p>No tasks completed yet.</p>
         </div>
-        <div class="quadrant" id="quadrant-social" onclick="markAsDone('Social')">
-            <h2>Social</h2>
-            <p>Connecting with friends or family</p>
+        <div class="quadrants">
+            <div class="quadrant" id="henry-body" onclick="markAsDone('Henry', 'Body')">
+                <h2>Body</h2>
+                <p>Physical health and exercise</p>
+            </div>
+            <div class="quadrant" id="henry-intellectual" onclick="markAsDone('Henry', 'Intellectual')">
+                <h2>Intellectual</h2>
+                <p>Reading, learning, or skills</p>
+            </div>
+            <div class="quadrant" id="henry-mental" onclick="markAsDone('Henry', 'Mental')">
+                <h2>Mental</h2>
+                <p>Meditation or reflection</p>
+            </div>
+            <div class="quadrant" id="henry-social" onclick="markAsDone('Henry', 'Social')">
+                <h2>Social</h2>
+                <p>Connecting with friends or family</p>
+            </div>
         </div>
     </div>
 
     <!-- JavaScript -->
     <script>
-        // Store quadrant completion data in localStorage
         const STORAGE_KEY = 'habit-tracker-progress';
 
         // Initialize the app by loading saved progress
         function initialize() {
             const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-            for (const [quadrant, isDone] of Object.entries(savedData)) {
-                if (isDone) {
-                    const quadrantElement = document.getElementById(`quadrant-${quadrant.toLowerCase()}`);
-                    quadrantElement.classList.add('completed');
-                }
-            }
+            ['Ty', 'Henry'].forEach(person => {
+                const personData = savedData[person] || {};
+                Object.entries(personData).forEach(([quadrant, isDone]) => {
+                    if (isDone) {
+                        const quadrantElement = document.getElementById(`${person.toLowerCase()}-${quadrant.toLowerCase()}`);
+                        quadrantElement.classList.add('completed');
+                        updateProgressDisplay(person);
+                    }
+                });
+            });
         }
 
         // Mark a quadrant as done
-        function markAsDone(quadrant) {
-            const quadrantKey = quadrant.toLowerCase();
-            const quadrantElement = document.getElementById(`quadrant-${quadrantKey}`);
-            
-            // Check if already completed
+        function markAsDone(person, quadrant) {
+            const quadrantKey = `${person.toLowerCase()}-${quadrant.toLowerCase()}`;
+            const quadrantElement = document.getElementById(quadrantKey);
+
             if (!quadrantElement.classList.contains('completed')) {
                 quadrantElement.classList.add('completed');
-                saveProgress(quadrantKey, true);
-                alert(`Marked "${quadrant}" as done for the day!`);
+                saveProgress(person, quadrant, true);
+                updateProgressDisplay(person);
+                alert(`Marked "${quadrant}" as done for ${person} today!`);
             } else {
-                alert(`"${quadrant}" is already marked as done!`);
+                alert(`${person}'s "${quadrant}" is already marked as done!`);
             }
         }
 
         // Save progress to localStorage
-        function saveProgress(quadrant, isDone) {
+        function saveProgress(person, quadrant, isDone) {
             const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-            savedData[quadrant] = isDone;
+            savedData[person] = savedData[person] || {};
+            savedData[person][quadrant] = isDone;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+        }
+
+        // Update progress display
+        function updateProgressDisplay(person) {
+            const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+            const personData = savedData[person] || {};
+            const completedTasks = Object.entries(personData)
+                .filter(([_, isDone]) => isDone)
+                .map(([quadrant]) => `<li>${quadrant}</li>`)
+                .join('');
+            
+            const progressElement = document.getElementById(`${person.toLowerCase()}-progress`);
+            progressElement.innerHTML = completedTasks
+                ? `<ul>${completedTasks}</ul>`
+                : `<p>No tasks completed yet.</p>`;
         }
 
         // Clear progress for testing or reset
